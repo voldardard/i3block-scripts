@@ -4,7 +4,7 @@ Scripts used for i3block integred with i3bar
 ## xlockctl
 A tools to manage easily a xautolock while regarding media or what else 
 
-You can add thes line to you i3block.conf
+You can add these lines to you i3block.conf
 ```
 # Xlock
 #
