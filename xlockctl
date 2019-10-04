@@ -1,0 +1,121 @@
+#!/bin/bash
+
+status_file="$HOME/.xautlock_status"
+got_status="Enable"
+
+get_status(){
+	
+	got_status=$(<$status_file)
+	return 0
+}
+
+auto() {
+
+	if is_actif; then
+
+                get_status
+                
+		if [ "$got_status" == "Enable" ];then
+			disable_x
+		else 
+			enable_x
+		fi
+        fi
+
+}
+
+#tools
+is_actif(){
+	
+	if [ $(pgrep -c xautolock) -eq 0 ]; then
+		notify-send "xautolock is not started yet"	
+        	start_x	&
+
+		false
+
+	else
+
+		true
+	fi
+
+}
+
+#Fonction on x
+enable_x(){
+	if is_actif ; then
+
+		xautolock -enable
+	
+        	notify-send -u normal -t 10000 "Xautolock is now enable"
+		echo "Enable" > $status_file
+
+	fi
+
+}
+disable_x(){
+	if is_actif ;then
+
+		xautolock -disable
+		notify-send -u normal -t 10000 "xautolock is now disable"
+		echo "Disable" > $status_file
+	fi
+
+}
+start_x(){
+	if [ $(pgrep -c xautolock) -eq 0 ]; then
+		xautolock -detectsleep -time 2 -locker "i3ctl lock" -notify 30 -notifier "notify-send -u critical -t 10000 -- 'locking screen in 30 seconds'" &
+        	
+		notify-send -u normal -t 10000 "Xautolock is started";
+		
+		enable_x
+	else
+		notify-send -u normal -t 10000 "Xautolock is already started";
+
+	fi
+}
+restart_x(){
+	kill_x
+	start_x
+}
+kill_x(){
+	if [ ! $(pgrep -c xautolock) -eq 0 ]; then
+		pkill -f xautolock
+
+                notify-send -u normal -t 10000 "Xautolock is now killed";
+		echo "Killed" > $status_file
+        else
+                notify-send -u normal -t 10000 "Xautolock is already killed";
+		echo "Killed" > $status_file
+	fi
+
+}
+case $1 in
+    auto)
+        auto
+        ;;
+    enable)
+        enable_x
+        ;;
+    disable)
+	disable_x
+	;;
+    start)
+        start_x
+        ;;
+    stop)
+        kill_x
+        ;;
+restart)
+	restart_x
+	;;
+status)
+	get_status
+	echo $got_status
+	;;
+    *)
+        echo "Usage: $0 [auto|enable|disable|start|stop|restart|status]"
+        exit 1
+        ;;
+esac
+
+exit 0
